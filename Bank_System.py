@@ -134,6 +134,26 @@ class Account:
         else:
             raise Exception("Account not match with Card")
         
+    def transfer(self,atm_mac,cash,target_account):
+        if self.validate_atm(atm_mac) == True :
+            if cash <=0 :
+                raise ValueError("Transfer amount must be positive")
+            if atm_mac.atm_cash < cash:
+                raise Exception("Insufficient balance")
+            if self.__daily_used + cash > Account.withdraw_day_max:
+                raise Exception("Insufficient balance")
+            if self.amount < cash:
+                raise Exception("Insufficient balance")
+            self.__amount -= cash
+            target_account.amount += cash
+            self.__daily_used += cash
+            
+            self.create_transaction("TW",atm_mac.atm_id,cash,target_account.account_no)
+            target_account.create_transaction("TD", atm_mac.atm_id, cash, self.account_no)
+            atm_mac.eject_card()
+        else:
+            raise Exception("Account not match with Card")
+         
     @property
     def transaction(self):
         return self.__transaction
