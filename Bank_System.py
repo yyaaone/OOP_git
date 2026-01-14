@@ -100,6 +100,40 @@ class Account:
         
         return True
     
+    def deposit(self,atm_mac,cash):
+        if self.validate_atm(atm_mac) == True :
+            if cash <= 0:
+                raise ValueError("Deposit amount must be positive")
+            self.__amount += cash
+            atm_mac.add_cash(cash)
+            self.create_transaction("D",atm_mac.atm_id,cash)
+            atm_mac.eject_card()
+        else:
+            raise Exception("Daily limit exceeded")
+        
+    def withdraw(self,atm_mac,cash):
+        if self.validate_atm(atm_mac) == True :
+            if cash <=0 :
+                raise ValueError ("Withdraw amount must be positive")
+
+            if atm_mac.atm_cash< cash:
+                raise Exception("ATM has insufficient cash")
+            
+            if self.amount < cash:
+                raise Exception("Insufficient balance")
+            
+            if self.__daily_used + cash > Account.withdraw_day_max:
+                raise Exception("Daily limit exceeded")
+            
+            self.__amount -= cash
+            atm_mac.reduce_cash(cash)
+            self.__daily_used += cash
+
+            self.create_transaction("W",atm_mac.atm_id,cash)
+            atm_mac.eject_card()
+        else:
+            raise Exception("Account not match with Card")
+        
     @property
     def transaction(self):
         return self.__transaction
